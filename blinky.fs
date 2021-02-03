@@ -23,7 +23,19 @@ $40011000 constant GPIOC-base
 : set-gpio-control ( gpio-port pin mask -- ) swap shift-to-pin swap bis! ; 
 
 
+: transform-high-pin-control ( gpio-port pin -- gpio-port pin )
+
+  dup 8 >= if 8 - swap $4 + swap then ;
+
+
+GPIOA-base 13 transform-high-pin-control
+
+. hex . decimal 
+
+
 : clean-set ( mask gpio-port pin -- )
+ 
+  transform-high-pin-control ( mask gpio-port pin )
 
   swap dup @ ( mask pin gpio-port old-val )
 
@@ -39,16 +51,11 @@ $40011000 constant GPIOC-base
 
 output GPIOA-base 2 clean-set
 
-%0000 GPIOA-base 3 clean-set
+output GPIOA-base 1 clean-set
+
+output GPIOC-base 13 clean-set
 
 GPIOA-base @ b.
-
-b.
-
-
-GPIOA-base 2 output set-gpio-control
-
-GPIOA-base 1 output set-gpio-control
 
 $c constant control-offset
 
@@ -56,9 +63,11 @@ $c constant control-offset
 
 %1 2 lshift GPIOA-base control-offset + xor!
 
+%1 13 lshift GPIOC-base control-offset + xor!
+
 GPIOA-base control-offset + @ b.
 
-\ works above to set to set output and then toggle green and blue leds
+\ works above to set to set output and then toggle all three leds leds
 \ scrap underneat
 \ ******************************************************************
 
