@@ -1,41 +1,46 @@
-\ Program Name: blinky-1.fs  for Mecrisp-Stellaris by Matthias Koch
-\ This program blinks a green led, it's the simplest of 'blinkies' 
-\ Hardware: STM32F0 Discovery board
-\ Author:  t.porter <terry@tjporter.com.au>
-
+\ blinky for Mecrisp Quintus on Longan Nano ( RISC-V chip GD32FV103 )
 
 : b. binary . decimal ;
 
 
-\ output, push-pull
+\ taken from datasheet GD32VF103_User_Manual_EN_V1.0.pdf
 
-%0010 constant output
+%0010 constant output-low-freq
 
-%1111 constant all
+$40010800 constant GPIOA 
+
+$40011000 constant GPIOC 
+
+$C constant OCTL-offset
 
 
+\ taken from Longan Nano datasheet
+
+: red-led GPIOC 13 ;
+
+: green-led GPIOA 1 ;
+
+: blue-led GPIOA 2 ;
+
+
+
+\ shift 4 bit control bits to whole register mask
+ 
 : shift-to-pin ( bits pin --- mask ) 4 * lshift ;
 
-$40010800 constant GPIOA-base 
 
-$40011000 constant GPIOC-base 
+\ if pin > 7, use high register
 
-: set-gpio-control ( gpio-port pin mask -- ) swap shift-to-pin swap bis! ; 
-
-
-: transform-high-pin-control ( gpio-port pin -- gpio-port pin )
+: transform-high-pin ( gpio-port pin -- gpio-port pin )
 
   dup 8 >= if 8 - swap $4 + swap then ;
 
 
-GPIOA-base 13 transform-high-pin-control
+\ set gpio pin mode
 
-. hex . decimal 
-
-
-: clean-set ( mask gpio-port pin -- )
+: gpio-set-mode ( mask gpio-port pin -- )
  
-  transform-high-pin-control ( mask gpio-port pin )
+  transform-high-pin ( mask gpio-port pin )
 
   swap dup @ ( mask pin gpio-port old-val )
 
@@ -49,56 +54,56 @@ GPIOA-base 13 transform-high-pin-control
 
   ; 
 
-output GPIOA-base 2 clean-set
+: toggle ( gpio pin -- )
 
-output GPIOA-base 1 clean-set
+  %1 swap lshift swap OCTL-offset + xor! ;
+  
+  
 
-output GPIOC-base 13 clean-set
+\ setup - first set to high, then change mode
 
-GPIOA-base @ b.
+red-led toggle
 
-$c constant control-offset
+green-led toggle
 
-%1 1 lshift GPIOA-base control-offset + xor!
+blue-led toggle
 
-%1 2 lshift GPIOA-base control-offset + xor!
+output-low-freq red-led gpio-set-mode
 
-%1 13 lshift GPIOC-base control-offset + xor!
+output-low-freq green-led gpio-set-mode
 
-GPIOA-base control-offset + @ b.
-
-\ works above to set to set output and then toggle all three leds leds
-\ scrap underneat
-\ ******************************************************************
-
-: set-blue-output mode-output 4 2 * lshift GPIOA-base bis! ;
-
-set-blue-output
-
-mode-output 4 2 * lshift binary . decimal
-
-GPIOA-base @ binary . decimal
+output-low-freq blue-led gpio-set-mode
 
 
-%01  18 lshift $48000800 bis!		
+\ some funnky lights
 
-: half-second-delay 400000 0 do loop ;
 
-: green-led.on   %1  9 lshift $48000818 + . ;	
+: delay 900000 0 do loop ;
 
-: green-led.off  %1 9 lshift $48000828 + . ; 
  
 : blink		
 
 do
 
-green-led.on
+green-led toggle
 
-half-second-delay
+delay
 
-green-led.off
+green-led toggle
 
-half-second-delay
+red-led toggle
+
+delay
+
+red-led toggle
+
+blue-led toggle
+
+delay
+
+blue-led toggle
+
+delay
 
 loop
 
@@ -106,9 +111,4 @@ loop
 
 
 3 0 blink
-
-
-
-
-%00010000 %00001000 or b.
 
