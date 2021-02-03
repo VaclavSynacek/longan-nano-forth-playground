@@ -54,19 +54,29 @@ $C constant OCTL-offset
 
   ; 
 
-: toggle ( gpio pin -- )
+: prepare-output ( gpio pin -- mask addr )
 
-  %1 swap lshift swap OCTL-offset + xor! ;
+  %1 swap lshift swap OCTL-offset + ;
   
+
+\ finally active operations
+
+: toggle ( gpio pin -- ) prepare-output xor! ;
+
+: on ( gpio pin -- ) prepare-output bic! ; \ leds are the other way round 
+
+: off ( gpio pin -- ) prepare-output bis! ; \ off is on and on is off
+
+
   
 
 \ setup - first set to high, then change mode
 
-red-led toggle
+red-led off 
 
-green-led toggle
+green-led off
 
-blue-led toggle
+blue-led off
 
 output-low-freq red-led gpio-set-mode
 
@@ -109,11 +119,12 @@ loop
 
 ;	
 
-
 3 0 blink
 
 
-: funk begin toggle delay depth 1 <= until ;
+: funk begin toggle delay depth 1 <= until
+
+  red-led off green-led off blue-led off ;
 
 
 red-led blue-led red-led green-led red-led blue-led 
