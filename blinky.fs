@@ -112,3 +112,17 @@ loop
 
 3 0 blink
 
+
+: funk begin toggle delay depth 1 <= until ;
+
+
+red-led blue-led red-led green-led red-led blue-led 
+
+red-led blue-led red-led green-led red-led blue-led 
+
+red-led blue-led red-led green-led red-led blue-led funk
+
+
+
+
+
