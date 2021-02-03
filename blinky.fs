@@ -26,8 +26,15 @@ GPIOA-base 2 output set-gpio-control
 
 GPIOA-base 1 output set-gpio-control
 
+$c constant control-offset
 
-\ works above to set blue and green to output,
+%1 1 lshift GPIOA-base control-offset + xor!
+
+%1 2 lshift GPIOA-base control-offset + xor!
+
+GPIOA-base control-offset + @ b.
+
+\ works above to set to set output and then toggle green and blue leds
 \ scrap underneat
 \ ******************************************************************
 
