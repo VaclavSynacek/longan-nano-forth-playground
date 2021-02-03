@@ -22,6 +22,30 @@ $40011000 constant GPIOC-base
 
 : set-gpio-control ( gpio-port pin mask -- ) swap shift-to-pin swap bis! ; 
 
+
+: clean-set ( mask gpio-port pin -- )
+
+  swap dup @ ( mask pin gpio-port old-val )
+
+  2 pick %1111 swap shift-to-pin ( mask pin gpio-port oldval mask-to-clear ) 
+
+  bic 2swap ( gpio-port cleared-val mask pin )
+
+  shift-to-pin or ( gpio-port new-val )
+
+  swap ! ( -- )
+
+  ; 
+
+output GPIOA-base 2 clean-set
+
+%0000 GPIOA-base 3 clean-set
+
+GPIOA-base @ b.
+
+b.
+
+
 GPIOA-base 2 output set-gpio-control
 
 GPIOA-base 1 output set-gpio-control
@@ -73,3 +97,9 @@ loop
 
 
 3 0 blink
+
+
+
+
+%00010000 %00001000 or b.
+
